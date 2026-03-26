@@ -1,0 +1,83 @@
+from telegram import Update, KeyboardButton, ReplyKeyboardMarkup, WebAppInfo
+from telegram.ext import Application, CommandHandler, ContextTypes
+
+# Токен вашего бота (замените на свой)
+TOKEN = 8625736556:AAGN1gJp8Izwz-rD0CWBSai80PIsVobjnlk
+
+# Ссылка на вашу страницу с шаром (замените на свою)
+WEB_APP_URL = https://ssshineli.github.io/sky_warm/
+
+# Команда /start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Создаём клавиатуру с одной кнопкой для вызова /balloon
+    keyboard = [
+        [KeyboardButton("🎈 Отправить шар памяти")]
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    
+    # Отправляем приветственное сообщение
+    await update.message.reply_text(
+        "🌟 *Привет, друг!*\n\n"
+        "Я — бот памяти. Здесь можно отпустить в небо воздушный шар в честь твоего любимого питомца.\n\n"
+        "🐾 *Как это работает:*\n"
+        "1. Нажми на кнопку «🎈 Отправить шар памяти» внизу\n"
+        "2. Напиши имя питомца и одно слово (например: *спасибо*, *помню*, *люблю*)\n"
+        "3. Шар улетит в небо, а твоя память останется с тобой\n\n"
+        "✨ Ты не один. Твои чувства важны.\n\n"
+        "👇 *Нажми на кнопку ниже, чтобы начать*",
+        reply_markup=reply_markup,
+        parse_mode="Markdown"
+    )
+
+# Команда /balloon (и обработка нажатия на кнопку)
+async def balloon(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Кнопка с WebApp (страница с шаром)
+    webapp_keyboard = [
+        [KeyboardButton(
+            text="🎈 Запустить шар",
+            web_app=WebAppInfo(url=WEB_APP_URL)
+        )]
+    ]
+    reply_markup = ReplyKeyboardMarkup(webapp_keyboard, resize_keyboard=True)
+    
+    await update.message.reply_text(
+        "🌤 *Готов отпустить шар?*\n\n"
+        "Нажми на кнопку ниже, откроется страница.\n"
+        "Введи имя своего друга и одно слово.\n\n"
+        "Шар улетит — и станет чуть легче.",
+        reply_markup=reply_markup,
+        parse_mode="Markdown"
+    )
+
+# Обработка обычных текстовых сообщений (если пользователь просто что-то пишет)
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    
+    if text == "🎈 Отправить шар памяти":
+        # Если пользователь нажал кнопку из /start — вызываем /balloon
+        await balloon(update, context)
+    else:
+        # Если написал что-то другое — напоминаем
+        await update.message.reply_text(
+            "Нажми на кнопку «🎈 Отправить шар памяти» или отправь команду /balloon",
+            reply_markup=ReplyKeyboardMarkup(
+                [[KeyboardButton("🎈 Отправить шар памяти")]],
+                resize_keyboard=True
+            )
+        )
+
+def main():
+    app = Application.builder().token(TOKEN).build()
+    
+    # Регистрируем команды
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("balloon", balloon))
+    
+    # Регистрируем обработчик текстовых сообщений (для кнопок)
+    app.add_handler(MessageHandler(None, handle_message))
+    
+    print("🚀 Бот запущен и работает...")
+    app.run_polling()
+
+if __name__ == "__main__":
+    main()
